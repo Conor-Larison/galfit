@@ -1,6 +1,9 @@
 # Anna de Graaff 
 # Last modified 29/4/2016
-#
+
+
+# Further Work by Conor Larison
+# 
 # - Selects (components) of objects and determines whether they are detected
 # - Sets initial parameters for Galfit
 # - Creates (multi-component) models to objects using Galfit
