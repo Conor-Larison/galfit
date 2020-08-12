@@ -1,6 +1,8 @@
 # Anna de Graaff 
 # Last modified 29/4/2016
 #
+# Further Work by Conor Larison
+#
 # - takes HST images and reads in reg files
 # - computes pixel coordinates of objects from reg file
 # - create thumbnail image (stamp) of object (100x100 pixels)
