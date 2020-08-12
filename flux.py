@@ -1,6 +1,8 @@
 # Anna de Graaff 
 # Last modified 29/4/2016
 #
+# Further Work by Conor Larison
+#
 # - Determines whether the object closest to the centre of each stamp is detected or not (above or below 3 sigma limit)
 # - Plots distributions of multiples of sigma, as well as a bar chart of detected/undetected objects per field
 # - Stores information (mean absolute deviation, as well as median fluxes) for use in galfit code/masking code
