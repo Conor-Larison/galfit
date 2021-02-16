@@ -1,8 +1,6 @@
 # Anna de Graaff 
 # Last modified 29/4/2016
 #
-# Further Work by Conor Larison
-#
 # - takes HST images and reads in reg files
 # - computes pixel coordinates of objects from reg file
 # - create thumbnail image (stamp) of object (100x100 pixels)
@@ -14,10 +12,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as col
 import astropy.io.fits as pf
-import glob
 import os
 import _pickle as pickle
 from astropy import wcs
+from scipy import stats
 import sys
 import math as mt
 
@@ -36,13 +34,17 @@ def main():
 	lines = lines[i:]
 	ra = []
 	dec = []
+	names = []
 
 
 	for j in range(len(lines)):
 		ra.append(lines[j][6:18])
 		dec.append(lines[j][19:31])
+		names.append(lines[j][-8:-2])
 	
 	a.close()
+
+
 
 
 	img = img_fits(data)
@@ -69,12 +71,15 @@ def main():
 		os.remove(os.path.join(new_dir,f))
 
 
+
 	# create stamps
 	width = 50
 	for i in range(len(obj_pix)): 	
 		X = obj_pix[i][0]
 		Y = obj_pix[i][1]
 		
+
+
 		if X-width >= 0 and X+width < xmax:
 			stamp = np.empty([0,2*width])
 		elif X-width >= 0:
@@ -85,19 +90,54 @@ def main():
 		for l in range(int(Y-width),int(Y+width)):
 			row = np.array([])
 			if l>=0 and l< ymax:
-				for k in range(int(X-width),int(X+width)):
+				k = int(X-width)
+				while k < int(X+width):
 					if k>=0 and k<xmax:
-						row = np.append(row,expt*img[l][k]) # multiply pixel values by exptime for galfit to run properly
+						if np.isnan(img[l][k]) == True:
+							
+							if k+10 >= int(X+width):
+								row = np.append(row,[0]*(int(X+width) - k))
+								k = int(X+width)
+							else:
+								row = np.append(row,[0]*10)
+								k+=10
+						else:
+							row = np.append(row,expt*img[l][k]) # multiply pixel values by exptime for galfit to run properly
+							k+=1
 				stamp = np.vstack((row,stamp))
 
 		
 		xm = int(stamp.shape[1]/2)
 		ym = int(stamp.shape[0]/2)
+
+
+
+		new_stamp = []
+		
+
+		for x in range(len(stamp[0])):
+			for y in range(len(stamp[1])):
+				new_stamp.append(stamp[x][y])
+
+		std = 1.4826 * stats.median_absolute_deviation(new_stamp)
+
+		med = np.median(new_stamp)
+
+
+
 		# check if stamp is empty and create fits file
-		if np.isnan(stamp[xm][ym]) == False:
-			stamp = stamp - np.median(stamp)	# subtracts median value from image		
+		if np.isnan(stamp[xm][ym]) == False and stamp[xm][ym] != 0:
+
+			for m in range(len(stamp[0])):
+				for n in range(len(stamp[1])):
+					
+					if stamp[m][n] == 0:
+						stamp[m][n] = np.random.normal(med,std)
+
+			stamp = stamp - np.median(stamp)	# subtracts median value from image
+			stamp = np.flipud(stamp)	
 			hdu = pf.PrimaryHDU(stamp,header)
-			hdu.writeto(new_dir+str(i)+'_q2343_f140.fits')
+			hdu.writeto(new_dir+names[i]+'_q2343_f140.fits')
 
 
 # functions to open fits images/headers and transform coordinates
